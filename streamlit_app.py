@@ -28,25 +28,41 @@ if sidebar_radio == 'NAV':
 
     nav_df1 = nav_df[pd.to_datetime(nav_df['date'], format = '%Y-%m-%dT%H:%M:%S').dt.year == year_option].reset_index(drop = True)
 
+    top_performance_options = option = st.radio(
+                                'top 5 performers --> select criteria',
+                                ('yearly return', 'standard deviation', 'sharpe ratio'),
+                                horizontal = True)
+
     performance_df = pd.DataFrame()
     for short_code in nav_df1.short_code.unique():
         df1 = nav_df1[nav_df1['short_code'] == short_code].sort_values(by = ['date'], ascending = True).reset_index(drop = True)
-        nav_df1['pct_change'] = nav_df1['value'].pct_change()
-        ret = (nav_df1['value'][nav_df1.shape[0] - 1] / nav_df1['value'][0]) - 1
-        stdev = nav_df1['pct_change'].std()
+        df1['pct_change'] = df1['value'].pct_change()
+        ret = (df1['value'][df1.shape[0] - 1] / nav_df1['value'][0]) - 1
+        stdev = df1['pct_change'].std()
         sharpe = ret / stdev
         performance_df = pd.concat([performance_df, 
-                                    pd.DataFrame([[short_code, ret, stdev, sharpe]], columns = ['short_code', 'mean', 'stdev', 'sharpe'])],
+                                    pd.DataFrame([[short_code, ret, stdev, sharpe]], columns = ['short_code', 'yearly return', 'standard deviation', 'sharpe ratio'])],
                                     axis = 0).reset_index(drop = True)
-    st.dataframe(performance_df.sort_values(by = 'mean'))
+    
+    if top_performance_options in ['yearly return', 'sharpe ratio']:
+        performance_df = performance_df.sort_values(by = [top_performance_options], ascending = False).reset_index(drop = True)
+    else:
+        performance_df = performance_df.sort_values(by = [top_performance_options], ascending = True).reset_index(drop = True)
+    performance_df1 = performance_df.iloc[:5, :]
+    performance_df1 = performance_df1.style.format({
+                                                    'yearly return': '{:,.2f}%'.format,
+                                                    'standard deviation': '{:,.4f}'.format,
+                                                    'sharpe ratio': '{:,.2f}'.format,
+                                                })
 
+    st.dataframe(performance_df1, use_container_width = True)
     index_options = st.multiselect('select index', 
                                     indices_dict.keys(), 
                                     ['SET Index', 'VN Index'])
 
     fund_options = st.multiselect('select fund(s)', 
                                     nav_df1.short_code.unique().tolist(), 
-                                    nav_df1.short_code.unique().tolist()[0])
+                                    performance_df.short_code[:5])
 
     df = nav_df1[nav_df1['short_code'].isin(fund_options)]
     df['date'] = pd.to_datetime(df['date'], format = '%Y-%m-%dT%H:%M:%S')
@@ -90,13 +106,13 @@ if sidebar_radio == 'NAV':
                             y=0.99,
                             xanchor="left",
                             x=0.01
-                        ))
+                        ),
+                        margin=dict(l=0, r=0, t=0, b=0))
 
     fig.update_layout(hovermode="x unified")
     fig.update_xaxes(showgrid = False)
     fig.update_yaxes(showgrid = True,  linewidth=0.5)
     st.plotly_chart(fig, use_container_width=True)
-    st.dataframe(index_df, use_container_width = True)
     
 # %%
 # color: darkmint

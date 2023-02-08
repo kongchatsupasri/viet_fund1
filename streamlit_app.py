@@ -1,147 +1,183 @@
 #%%
-import pandas as pd
 import streamlit as st
+import pandas as pd
+# import streamlit_nested_layout
 import plotly.graph_objects as go
-import glob
-import numpy as np
 import plotly.express as px
-# %% 
-st.header('🇻🇳 vietnam fund')
-with st.sidebar:
-  st.header(':round_pushpin: Dashboard')
-  sidebar_radio = st.radio('sidebar_radio',
-                          ['NAV', 'treemap', 'spiderweb'],
-                          # index = 0,
-                          label_visibility = 'collapsed',
-                          key = 'disabled')
 #%%
-#https://finance.yahoo.com/quote/JWN/chart?p=JWN#eyJpbnRlcnZhbCI6ImRheSIsInBlcmlvZGljaXR5IjoxLCJ0aW1lVW5pdCI6bnVsbCwiY2FuZGxlV2lkdGgiOjgsImZsaXBwZWQiOmZhbHNlLCJ2b2x1bWVVbmRlcmxheSI6dHJ1ZSwiYWRqIjp0cnVlLCJjcm9zc2hhaXIiOnRydWUsImNoYXJ0VHlwZSI6ImxpbmUiLCJleHRlbmRlZCI6ZmFsc2UsIm1hcmtldFNlc3Npb25zIjp7fSwiYWdncmVnYXRpb25UeXBlIjoib2hsYyIsImNoYXJ0U2NhbGUiOiJwZXJjZW50Iiwic3R1ZGllcyI6eyLigIx2b2wgdW5kcuKAjCI6eyJ0eXBlIjoidm9sIHVuZHIiLCJpbnB1dHMiOnsiaWQiOiLigIx2b2wgdW5kcuKAjCIsImRpc3BsYXkiOiLigIx2b2wgdW5kcuKAjCJ9LCJvdXRwdXRzIjp7IlVwIFZvbHVtZSI6IiMwMGIwNjEiLCJEb3duIFZvbHVtZSI6IiNmZjMzM2EifSwicGFuZWwiOiJjaGFydCIsInBhcmFtZXRlcnMiOnsid2lkdGhGYWN0b3IiOjAuNDUsImNoYXJ0TmFtZSI6ImNoYXJ0In19fSwicGFuZWxzIjp7ImNoYXJ0Ijp7InBlcmNlbnQiOjEsImRpc3BsYXkiOiJKV04iLCJjaGFydE5hbWUiOiJjaGFydCIsImluZGV4IjowLCJ5QXhpcyI6eyJuYW1lIjoiY2hhcnQiLCJwb3NpdGlvbiI6bnVsbH0sInlheGlzTEhTIjpbXSwieWF4aXNSSFMiOlsiY2hhcnQiLCLigIx2b2wgdW5kcuKAjCJdfX0sInNldFNwYW4iOnt9LCJsaW5lV2lkdGgiOjIsInN0cmlwZWRCYWNrZ3JvdW5kIjp0cnVlLCJldmVudHMiOnRydWUsImNvbG9yIjoiIzAwODFmMiIsInN0cmlwZWRCYWNrZ3JvdWQiOnRydWUsImV2ZW50TWFwIjp7ImNvcnBvcmF0ZSI6eyJkaXZzIjp0cnVlLCJzcGxpdHMiOnRydWV9LCJzaWdEZXYiOnt9fSwic3ltYm9scyI6W3sic3ltYm9sIjoiSldOIiwic3ltYm9sT2JqZWN0Ijp7InN5bWJvbCI6IkpXTiIsInF1b3RlVHlwZSI6IkVRVUlUWSIsImV4Y2hhbmdlVGltZVpvbmUiOiJBbWVyaWNhL05ld19Zb3JrIn0sInBlcmlvZGljaXR5IjoxLCJpbnRlcnZhbCI6ImRheSIsInRpbWVVbml0IjpudWxsLCJzZXRTcGFuIjp7fX0seyJzeW1ib2wiOiJBQVBMIiwic3ltYm9sT2JqZWN0Ijp7InN5bWJvbCI6IkFBUEwifSwicGVyaW9kaWNpdHkiOjEsImludGVydmFsIjoiZGF5IiwidGltZVVuaXQiOm51bGwsInNldFNwYW4iOnt9LCJpZCI6IkFBUEwiLCJwYXJhbWV0ZXJzIjp7ImNvbG9yIjoiIzcyZDNmZiIsIndpZHRoIjoyLCJpc0NvbXBhcmlzb24iOnRydWUsInNoYXJlWUF4aXMiOnRydWUsImNoYXJ0TmFtZSI6ImNoYXJ0Iiwic3ltYm9sT2JqZWN0Ijp7InN5bWJvbCI6IkFBUEwifSwicGFuZWwiOiJjaGFydCIsImZpbGxHYXBzIjpmYWxzZSwiYWN0aW9uIjoiYWRkLXNlcmllcyIsInN5bWJvbCI6IkFBUEwiLCJnYXBEaXNwbGF5U3R5bGUiOiJ0cmFuc3BhcmVudCIsIm5hbWUiOiJBQVBMIiwib3ZlckNoYXJ0Ijp0cnVlLCJ1c2VDaGFydExlZ2VuZCI6dHJ1ZSwiaGVpZ2h0UGVyY2VudGFnZSI6MC43LCJvcGFjaXR5IjoxLCJoaWdobGlnaHRhYmxlIjp0cnVlLCJ0eXBlIjoibGluZSIsInN0eWxlIjoic3R4X2xpbmVfY2hhcnQifX1dfQ--
-#https://stackoverflow.com/questions/41599166/python-plotly-legend-positioning-and-formatting
-if sidebar_radio == 'NAV':
-    year_option = st.selectbox('select year', [i for i in range(2017, 2024)[::-1]])
-    # note : no FTSE, MAI
-    # data source; www.investing.com
-    index_files = glob.glob('./indices/*.csv')
-    indices_dict = {file.split('/')[-1].split(' His')[0]: pd.read_csv('./indices/'+file.split('/')[-1]) for file in index_files}
+st.set_page_config(layout="wide")
+st.header('🇻🇳 vietnam 🇻🇳')
+#%% sidebar
+nav_df = pd.read_csv('./nav_df.csv')
+nav_df['date'] = pd.to_datetime(nav_df['date'], format = '%Y-%m-%d')
 
-    nav_df = pd.read_csv('./nav_df.csv')
+indices_df = pd.read_csv('./index_df.csv')
+indices_df['date'] = pd.to_datetime(indices_df['date'], format = '%Y-%m-%d')
+indices_df['value'] = indices_df['value'].astype(float)
 
-    nav_df1 = nav_df[pd.to_datetime(nav_df['date'], format = '%Y-%m-%dT%H:%M:%S').dt.year == year_option].reset_index(drop = True)
+with st.sidebar:
+    year_option = st.select_slider(
+        'select year',
+        options=[str(i) for i in range(2020, 2024)])
+    st.write("--")
 
-    top_performance_options = option = st.radio(
-                                'top 5 performers --> select criteria',
-                                ('yearly return', 'standard deviation', 'sharpe ratio'),
-                                horizontal = True)
+nav_df = nav_df[nav_df['date'].dt.year == int(year_option)].reset_index(drop = True)
+indices_df = indices_df[indices_df['date'].dt.year == int(year_option)].reset_index(drop = True)
 
-    performance_df = pd.DataFrame()
-    for short_code in nav_df1.short_code.unique():
-        df1 = nav_df1[nav_df1['short_code'] == short_code].sort_values(by = ['date'], ascending = True).reset_index(drop = True)
-        df1['pct_change'] = df1['value'].pct_change()
-        ret = (df1['value'][df1.shape[0] - 1] / nav_df1['value'][0]) - 1
-        stdev = df1['pct_change'].std()
-        sharpe = ret / stdev
-        performance_df = pd.concat([performance_df, 
-                                    pd.DataFrame([[short_code, ret, stdev, sharpe]], columns = ['short_code', 'yearly return', 'standard deviation', 'sharpe ratio'])],
-                                    axis = 0).reset_index(drop = True)
+fund_performance_df = pd.DataFrame()
+for short_code in nav_df.short_code.unique():
+    df1 = nav_df[nav_df['short_code'] == short_code].sort_values(by = ['date'], ascending = True).reset_index(drop = True)
+    type_ = df1['type'][0]
+    df1['pct_change'] = df1['value'].pct_change()
+    ret = (df1['value'][df1.shape[0] - 1] / df1['value'][0]) - 1
+    stdev = df1['pct_change'].std()
+    sharpe = ret / stdev
+    fund_performance_df = pd.concat([fund_performance_df, 
+                                pd.DataFrame([[type_, short_code, ret, stdev, sharpe]], columns = ['type', 'short_code', 'yearly return', 'standard deviation', 'sharpe ratio'])],
+                                axis = 0).reset_index(drop = True)
+                                
+# st.dataframe(fund_performance_df.head())
+
+index_performance_df = pd.DataFrame()
+for index_ in indices_df['index'].unique():
+    df1 = indices_df[indices_df['index'] == index_].sort_values(by = ['date'], ascending = True).reset_index(drop = True)
+    df1['pct_change'] = df1['value'].pct_change()
+    ret = (df1['value'][df1.shape[0] - 1] / df1['value'][0]) - 1
+    stdev = df1['pct_change'].std()
+    sharpe = ret / stdev
+    index_performance_df = pd.concat([index_performance_df, 
+                                pd.DataFrame([[index_, ret, stdev, sharpe]], columns = ['index', 'yearly return', 'standard deviation', 'sharpe ratio'])],
+                                axis = 0).reset_index(drop = True)
+# st.dataframe(index_performance_df.head())
+# st.write(index_performance_df['index'])
+with st.sidebar:
+    fund_option = st.multiselect(
+        'select fund for comparison (default selection: top 5 yearly return)',
+        fund_performance_df['short_code'],
+        fund_performance_df['short_code'][:5])
+
+#%%
+
+ind1, ind2, ind3, ind4 = st.columns(4)
+        
+with ind1:
+    st.metric(label="SET Index", 
+                value = indices_df[indices_df['index'] == 'SET Index']['value'].tolist()[-1], 
+                delta="{0:.1%}".format(index_performance_df[index_performance_df['index'] == 'SET Index']['yearly return'].tolist()[0]),
+                label_visibility = 'visible')
+
+with ind2:
+    st.metric(label="VN Index", 
+                value = indices_df[indices_df['index'] == 'VN Index']['value'].tolist()[-1], 
+                delta="{0:.1%}".format(index_performance_df[index_performance_df['index'] == 'VN Index']['yearly return'].tolist()[0]),
+                label_visibility = 'visible')
+
+with ind3:
+    st.metric(label="SET 100", 
+                value = indices_df[indices_df['index'] == 'SET 100']['value'].tolist()[-1], 
+                delta="{0:.1%}".format(index_performance_df[index_performance_df['index'] == 'SET 100']['yearly return'].tolist()[0]),
+                label_visibility = 'visible')
+
+with ind4:
+    st.metric(label="VN 100", 
+                value = indices_df[indices_df['index'] == 'VN100']['value'].tolist()[-1], 
+                delta="{0:.1%}".format(index_performance_df[index_performance_df['index'] == 'VN100']['yearly return'].tolist()[0]),
+                label_visibility = 'visible')
+
+
+index_options = ['SET Index', 'VN Index']
+main_col1, main_col2, main_col3 = st.columns((7, 1, 7))
+
+
+
+with main_col1:
     
-    if top_performance_options in ['yearly return', 'sharpe ratio']:
-        performance_df = performance_df.sort_values(by = [top_performance_options], ascending = False).reset_index(drop = True)
-    else:
-        performance_df = performance_df.sort_values(by = [top_performance_options], ascending = True).reset_index(drop = True)
-    performance_df1 = performance_df.iloc[:5, :]
-    performance_df1 = performance_df1.style.format({
-                                                    'yearly return': '{:,.2f}%'.format,
-                                                    'standard deviation': '{:,.4f}'.format,
-                                                    'sharpe ratio': '{:,.2f}'.format,
-                                                })
-
-    st.dataframe(performance_df1, use_container_width = True)
-    index_options = st.multiselect('select index', 
-                                    indices_dict.keys(), 
-                                    ['SET Index', 'VN Index'])
-
-    fund_options = st.multiselect('select fund(s)', 
-                                    nav_df1.short_code.unique().tolist(), 
-                                    performance_df.short_code[:5])
-
-    df = nav_df1[nav_df1['short_code'].isin(fund_options)]
-    df['date'] = pd.to_datetime(df['date'], format = '%Y-%m-%dT%H:%M:%S')
-
-    df = df[df['date'].dt.year == year_option].reset_index(drop = True)
-
-    indices_dict = {file.split('/')[-1].split(' His')[0]: pd.read_csv('./indices/'+file.split('/')[-1]) for file in index_files}
-    
-    fig = go.Figure()
+    st.markdown("<h3 style='text-align: center;'>Chart name</h3>", unsafe_allow_html=True)
+    scatter_fig = go.Figure()
     for index in index_options:
-        index_df = indices_dict[index]
-        index_df['Date'] = pd.to_datetime(index_df['Date'], format = '%m/%d/%Y')
-        index_df = index_df.sort_values(by = ['Date'], ascending = True)
-        index_df = index_df[index_df.Date.dt.year == year_option].reset_index(drop = True)
-        # st.write(index['Price'].dtypes)
-        if index_df['Price'].dtype == 'float64':
+        index_df = indices_df[indices_df['index'] == index].reset_index(drop = True)
+        # index_df['date'] = pd.to_datetime(index_df['date'], format = '%m/%d/%Y')
+        index_df = index_df.sort_values(by = ['date'], ascending = True)
+
+        if index_df['value'].dtype == 'float64':
             pass
         else:
-            index_df['Price'] = index_df['Price'].map(lambda x: (''.join(x.split(',')))).astype(float)
-        index_df['Index'] = (index_df['Price']/ index_df.loc[0, 'Price']) - 1
+            index_df['value'] = index_df['value'].map(lambda x: (''.join(x.split(',')))).astype(float)
+        index_df['pct_chg'] = index_df['value'].pct_change().fillna(0)
+        index_df['cum_ret'] = index_df['pct_chg'].cumsum()
 
-        fig.add_trace(go.Scatter(x = index_df.Date,
-                                y = index_df.Index,
+        scatter_fig.add_trace(go.Scatter(x = index_df.date,
+                                y = index_df.cum_ret,
                                 mode = 'lines',
                                 line = dict(width = 3, dash = 'dot'),
                                 name = index,
                                 hovertemplate = index + ': %{y:.2%}<extra></extra>'))
 
-    for short_code in df.short_code.unique():
-        df1 = df[df['short_code'] == short_code].reset_index(drop = True)
-        df1['Index'] = (df1['value'] / df1.loc[0, 'value']) -1
-        fig.add_trace(go.Scatter(x = df1.date,
-                                y = df1.Index,
+    for short_code in fund_option:
+        nav_df1 = nav_df[nav_df['short_code'] == short_code].reset_index(drop = True)
+        nav_df1['Index'] = (nav_df1['value'] / nav_df1.loc[0, 'value']) -1
+        scatter_fig.add_trace(go.Scatter(x = nav_df1.date,
+                                y = nav_df1.Index,
                                 mode = 'lines',
-                                line = dict(width = 1),
-                                name = df1.loc[0, 'short_code'],
+                                line = dict(width = 3),
+                                name = nav_df1.loc[0, 'short_code'],
                                 hovertemplate = short_code + ': %{y:.2%}<extra></extra>'))
-    fig.layout.yaxis.tickformat = ',.0%'
-    fig.update_layout(legend=dict(
+    scatter_fig.layout.yaxis.tickformat = ',.0%'
+    scatter_fig.update_layout(
+                        # title = 'chart title', 
+                        # yaxis_title = 'y axis title',
+                        # legend_title = 'legend title',
+                        autosize=False,
+                        # width=450,
+                        # height=700,
+                        legend=dict(
                             yanchor="auto",
                             y=0.99,
                             xanchor="left",
                             x=0.01
                         ),
-                        margin=dict(l=0, r=0, t=0, b=0))
+                        margin=dict(l=0, t = 0, r=0, b=0)
+                        )
 
-    fig.update_layout(hovermode="x unified")
-    fig.update_xaxes(showgrid = False)
-    fig.update_yaxes(showgrid = True,  linewidth=0.5)
-    st.plotly_chart(fig, use_container_width=True)
+    scatter_fig.update_layout(hovermode="x unified")
+    scatter_fig.update_xaxes(showgrid = False)
+    scatter_fig.update_yaxes(showgrid = True,  linewidth=0.5)
+    st.plotly_chart(scatter_fig, use_container_width=True)
+
+with main_col3:
     
-# %%
-# color: darkmint
-elif sidebar_radio == 'treemap':
-
-    nav_df = pd.read_csv('nav_df.csv')
-    name_df = pd.read_csv('viet_fund.csv')
-    # %%
-    #PRINCIPAL VTOPP-X  มูลค่าทรัพย์สินสุทธิ   1,452,292.3 บาท
-    year_option = st.selectbox('select year', [i for i in range(2017, 2024)[::-1]])
-    nav_df = nav_df[pd.to_datetime(nav_df.date, format = '%Y-%m-%d').dt.year == year_option]
-
-    df = pd.DataFrame()
-    for short_code in nav_df.short_code.unique():
-        parent = name_df[name_df['short_code'] == short_code].cat_name_en.values[0] + ' | ' + name_df[name_df['short_code'] == short_code].sub_cat_name_en.values[0]
-        nav_df1 = nav_df[nav_df['short_code'] == short_code].reset_index(drop = True)
-        ret = (nav_df1.iloc[-1, -2] / nav_df1.iloc[0, -2]) - 1
-        size = nav_df1.iloc[-1, -1] / 1000000
-        df = pd.concat([df, 
-                        pd.DataFrame([[parent, short_code, ret, size]], columns = ['parent', 'id', 'ret', 'size'])],
-                        axis = 0)
-
-
-    selected_color = st.selectbox('select colorscales', 
-                                   px.colors.named_colorscales())           
-    fig = px.treemap(df, path=[px.Constant("vietnam fund"), 'parent', 'id'], values='size',
-                    color='ret', hover_data=['ret', 'size'],
-                    color_continuous_scale=selected_color,
-                    color_continuous_midpoint=np.average(df['ret'], weights=df['size']))
-    fig.update_layout(margin = dict(t=50, l=25, r=25, b=25))
+    st.markdown("<h3 style='text-align: center;'>Chart name</h3>", unsafe_allow_html=True)
+    dff = px.data.wind()
+    fig = px.line_polar(dff, r="frequency", theta="direction", color="strength", line_close=True,
+                        color_discrete_sequence=px.colors.sequential.Plasma_r,
+                        template="plotly_dark",)
+    # fig.show()
     st.plotly_chart(fig, use_container_width=True)
-# %%
+
+st.markdown('#')
+st.markdown("<h3 style='text-align: center;'>table name</h3>", unsafe_allow_html=True)
+bttm_col1, bttm_col2, bttm_col3, bttm_col4 = st.columns([1, 1, 4, 1])
+with bttm_col2:
+    st.markdown('#')
+    top_performance_option = option = st.radio(
+                                'top 5 performers --> select criteria',
+                                ('yearly return', 'standard deviation', 'sharpe ratio'),
+                                horizontal = False)
+
+with bttm_col3:
+    if top_performance_option in ['yearly return', 'sharpe ratio']:
+        fund_performance_df = fund_performance_df.sort_values(by = [top_performance_option], ascending = False).reset_index(drop = True)
+    else:
+        fund_performance_df = fund_performance_df.sort_values(by = [top_performance_option], ascending = True).reset_index(drop = True)
+    fund_performance_df1 = fund_performance_df.iloc[:5, 1:]
+    fund_performance_df1 = fund_performance_df1.style.format({
+                                                    'yearly return': '{:,.2f}%'.format,
+                                                    'standard deviation': '{:,.2f}'.format,
+                                                    'sharpe ratio': '{:,.2f}'.format,
+                                                })
+
+
+    # st.subheader(f'sorted by {top_performance_option}')
+    st.dataframe(fund_performance_df1, use_container_width = True)
+
+st.info('data source: set, siamchart, finnomena, investing.com', icon="ℹ️")
